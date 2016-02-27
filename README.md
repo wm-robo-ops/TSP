@@ -9,10 +9,14 @@ Assumed first node is Mount Kosmo and second node is current location of BigDadd
 ## Using
 
 #### Compile
+```
 g++ -o TSP main.cpp
+```
 
 #### Run
+```
 ./TSP
+```
 
 #### Example
 An example [nodes.txt](/nodes.txt) file is provided.
