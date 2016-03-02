@@ -6,7 +6,6 @@
 
 #define earthRadiusM 6371000.0
 
-
 using namespace std;
 
 //Kosmo must be first node and the rover must be second node
@@ -27,29 +26,29 @@ double cordsToDist(vector<double> cord1, vector<double> cord2);
 double deg2rad(double deg);
 double rad2deg(double rad);
 void swap(int& a, int& b);
-void printVector(std::vector<int>& theVector);
-void generateAllPermutations(std::vector<int>& toBePermuted, unsigned int nextIndex);
-void generateAllPermutations(std::vector<int>& toBePermuted); 
+void printVector(vector<int>& theVector);
+void generateAllPermutations(vector<int>& toBePermuted, unsigned int nextIndex);
+void generateAllPermutations(vector<int>& toBePermuted);
 
 
-void swap(int& a, int& b){ 
+void swap(int& a, int& b){
 	int x=a;
   	a=b;
   	b=x;
 }
 
-void printVector(vector<int>& theVector) { 
+void printVector(vector<int>& theVector) {
 	for (unsigned int i=0; i<theVector.size(); i++) {
-    		std::cout << theVector[i];
+    		cout << theVector[i];
 		if (i != theVector.size() - 1) {
-			cout  << ",";	
+			cout  << ",";
 		}
 	}
-  	std::cout << "\n";
+  	cout << endl;
 }
 
-void generateAllPermutations(vector<int>& toBePermuted, unsigned int nextIndex) { 
-	if (nextIndex==toBePermuted.size()) { 
+void generateAllPermutations(vector<int>& toBePermuted, unsigned int nextIndex) {
+	if (nextIndex==toBePermuted.size()) {
 		//printVector(toBePermuted);
 		double distance = calculateTotalDistance(rock_nodes, nodes);
 		if (min_distance >  distance) {
@@ -58,20 +57,20 @@ void generateAllPermutations(vector<int>& toBePermuted, unsigned int nextIndex) 
 		}
     		return;
   	}
-	for (unsigned int i=nextIndex; i<toBePermuted.size(); i++) { 
+	for (unsigned int i=nextIndex; i<toBePermuted.size(); i++) {
 		swap(toBePermuted[i], toBePermuted[nextIndex]);
     		generateAllPermutations(toBePermuted, nextIndex+1);
     		swap(toBePermuted[i], toBePermuted[nextIndex]);
   	}
 }
 
-void generateAllPermutations(vector<int>& toBePermuted) { 
+void generateAllPermutations(vector<int>& toBePermuted) {
 	generateAllPermutations(toBePermuted, 0);
 }
 
 int main() {
 
-	fillNodes();	
+	fillNodes();
 	//double RIC[] = {37.5333, 77.4667};
 	//double DC[] = {38.9047, 77.0164};
 	//double WM[] = {37.2711, 76.7075};
@@ -84,12 +83,12 @@ int main() {
 	//nodes.push_back(RIC_cords);
 	//nodes.push_back(DC_cords);
 	//nodes.push_back(WM_cords);
-	//nodes.push_back(HS_cords);		
+	//nodes.push_back(HS_cords);
 
 	//double distance = cordsToDist(DC_cords, WM_cords);
 	//distance += cordsToDist(WM_cords, RIC_cords);
 	////cout<< distance << " m.\n";
-	
+
   	////rock_nodes.push_back(4);
   	//rock_nodes.push_back(3);
   	//rock_nodes.push_back(2);
@@ -107,31 +106,31 @@ int main() {
 }
 
 void fillNodes () {
-	
+
 	//line should  be Lat:Long:color
 	char line[1024];
 	FILE *file;
 	int counter = 0;
 	file = fopen("nodes.txt", "r");
+    cout << "[" << endl;
 	while (fgets(line, 1024, file) != NULL) {
-		double lat_cord, long_cord;
+		double lat, lon;
 		char color[100];
-		if (sscanf(line, "%lf : %lf : %99s", &lat_cord, &long_cord, color) != 3) {
-			cerr << "Couldn't parse line " << counter+1 << " correctly. Continuing ...\n";
+		if (sscanf(line, "%lf : %lf : %99s", &lat, &lon, color) != 3) {
+			cerr << "Couldn't parse line " << counter + 1 << " correctly. Continuing ...\n";
 			continue;
-		} 
-		cout << line << "\nlat cord: " << lat_cord << "\nlong cord: " << long_cord << "\ncolor: " <<  color << "\n\n";
-		double array[] = {lat_cord, long_cord};
+		}
+		cout << "{ \"lat\": " << lat << ", \"lon\": " << lon << ", \"color\": \"" <<  color << "\" }" << endl;
+		double array[] = {lat, lon};
 		vector<double> vec (array, array + sizeof(array)/sizeof(double));
 		nodes.push_back(vec);
 		if (counter >= 2) {
 			rock_nodes.push_back(counter);
 		}
-		counter ++;
-		
+		counter++;
 	}
+    cout << "]" << endl;
 	fclose(file);
-
 }
 
 double calculateTotalDistance(vector<int> rock_nodes, vector< vector<double> > nodes) {
@@ -139,19 +138,18 @@ double calculateTotalDistance(vector<int> rock_nodes, vector< vector<double> > n
 	if (nodes.size() <= 2) {
 		return cordsToDist(nodes[0], nodes[1]);
 	}
-	
+
 	//At least one rock node, calculate distance from rover to first rock
 	double cur_distance = cordsToDist(nodes[1], nodes[2]);
 
 	//Calculate distances from each rock to rock and final rock to start
 	for (unsigned int i=0; i < rock_nodes.size(); i++) {
-    		if (i != (rock_nodes.size() - 1)) {
+        if (i != (rock_nodes.size() - 1)) {
 			cur_distance += cordsToDist(nodes[rock_nodes[i]], nodes[rock_nodes[i+1]]);
 		} else {
 			cur_distance += cordsToDist(nodes[rock_nodes[i]], nodes[0]);
 		}
 	}
-	
 	return cur_distance;
 }
 
@@ -167,7 +165,6 @@ double cordsToDist(vector<double> cord1, vector<double> cord2) {
 	v = sin((lon2Rad - lon1Rad)/2);
 	distance = 2.0 * earthRadiusM * asin(sqrt(u * u + cos(lat1Rad) * cos(lat2Rad) * v * v));
 	return distance;
-
 }
 
 double deg2rad(double deg) {
