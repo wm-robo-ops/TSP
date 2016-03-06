@@ -3,6 +3,8 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <algorithm>
+
 
 #define earthRadiusM 6371000.0
 
@@ -11,7 +13,7 @@ using namespace std;
 
 //Kosmo must be first node and the rover must be second node
 vector< vector<double> > nodes;
-//Let black denote no value (for start and rover positions)
+//Anyting but valid colors will result in 0 value (note alien = 7pts)
 vector<string> colors;
 //Store the min route here
 vector<int> min_route;
@@ -21,16 +23,80 @@ double min_distance = HUGE_VAL;
 vector<int> rock_nodes;
 
 
+int getTotalPoints();
+int rockColorValue (string color);
+void swap(int& a, int& b);
+void printVector(vector<int>& theVector);
+void generateAllPermutations(vector<int>& toBePermuted, unsigned int nextIndex);
+void generateAllPermutations(vector<int>& toBePermuted); 
 void fillNodes ();
 double calculateTotalDistance(vector<int> rock_nodes, vector< vector<double> > nodes);
 double cordsToDist(vector<double> cord1, vector<double> cord2);
 double deg2rad(double deg);
 double rad2deg(double rad);
-void swap(int& a, int& b);
-void printVector(std::vector<int>& theVector);
-void generateAllPermutations(std::vector<int>& toBePermuted, unsigned int nextIndex);
-void generateAllPermutations(std::vector<int>& toBePermuted); 
 
+
+
+int main() {
+
+	//read in nodes.txt
+	fillNodes();	
+	
+	//need at least Mount Kosmo and BigDaddy location
+	if (nodes.size() < 2) {
+		cerr << "not enough nodes\n";
+		return 1;
+	}
+  	
+	//find min distance
+	generateAllPermutations(rock_nodes);
+	
+	//print results
+	cout << "min distance: " << min_distance << "\n";
+	
+	cout << "order: ";
+	printVector(rock_nodes);
+
+	int total_pts = getTotalPoints();
+	cout << "total points: " << total_pts << "\n";
+
+}
+
+int getTotalPoints() {
+
+	int total = 0;
+
+	for (unsigned int i = 0; i < min_route.size(); i++) {
+		total += rockColorValue(colors[min_route[i]]);
+	}
+
+	return total;
+
+}
+
+//assumes colors are all lowercase
+int rockColorValue (string color) {
+	
+	//string color_lower = std::transform(color.begin(), color.end(), color.begin(), ::tolower);
+
+	if (!color.compare("yellow")) {
+		return 1;
+	} else if (!color.compare("orange")) {
+		return 2;
+	} else if (!color.compare("red")) {
+		return 3;
+	} else if (!color.compare("blue")) {
+		return 4;
+	} else if (!color.compare("green")) {
+		return 5;
+	} else if (!color.compare("purple")) {
+		return 6;
+	} else if (!color.compare("alien"))  {
+		return 7;
+	} else  {
+		return 0;
+	}
+}
 
 void swap(int& a, int& b){ 
 	int x=a;
@@ -69,43 +135,6 @@ void generateAllPermutations(vector<int>& toBePermuted) {
 	generateAllPermutations(toBePermuted, 0);
 }
 
-int main() {
-
-	fillNodes();	
-	//double RIC[] = {37.5333, 77.4667};
-	//double DC[] = {38.9047, 77.0164};
-	//double WM[] = {37.2711, 76.7075};
-	//double HS[] = {29.7604, 95.3698};
-	//vector<double> RIC_cords (RIC, RIC + sizeof(RIC) / sizeof(double));
-	//vector<double> DC_cords (DC, DC + sizeof(DC) / sizeof(double));
-	//vector<double> WM_cords (WM,  WM + sizeof(WM) / sizeof(double));
-	//vector<double> HS_cords (HS, HS + sizeof(HS) / sizeof(double));
-
-	//nodes.push_back(RIC_cords);
-	//nodes.push_back(DC_cords);
-	//nodes.push_back(WM_cords);
-	//nodes.push_back(HS_cords);		
-
-	//double distance = cordsToDist(DC_cords, WM_cords);
-	//distance += cordsToDist(WM_cords, RIC_cords);
-	////cout<< distance << " m.\n";
-	
-  	////rock_nodes.push_back(4);
-  	//rock_nodes.push_back(3);
-  	//rock_nodes.push_back(2);
-  	////rock_nodes.push_back(1);
-  	////rock_nodes.push_back(6);
-  	////rock_nodes.push_back(8);
-	if (nodes.size() < 2) {
-		cerr << "not enough nodes\n";
-		return 1;
-	}
-  	generateAllPermutations(rock_nodes);
-	cout << "min distance: " << min_distance << "\n";
-	cout << "order: ";
-	printVector(rock_nodes);
-}
-
 void fillNodes () {
 	
 	//line should  be Lat:Long:color
@@ -123,7 +152,13 @@ void fillNodes () {
 		cout << line << "\nlat cord: " << lat_cord << "\nlong cord: " << long_cord << "\ncolor: " <<  color << "\n\n";
 		double array[] = {lat_cord, long_cord};
 		vector<double> vec (array, array + sizeof(array)/sizeof(double));
+		
+		//add to all node list
 		nodes.push_back(vec);
+		//add to color list
+		colors.push_back(color);
+		
+		//if 2nd node or more then it is a rock
 		if (counter >= 2) {
 			rock_nodes.push_back(counter);
 		}
