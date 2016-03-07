@@ -75,7 +75,7 @@ void outputJSON() {
 	string color = colors[1];
 	cout << "\t\t\t{ \"lat\": \"" << nodes[1][0] << "\", \"lon\": \"" << nodes[1][1] << "\", \"color\": \"" << color << "\" },\n";
 	
-	for (unsigned int i = 0; i < nodes.size(); i++) {
+	for (unsigned int i = 2; i < nodes.size(); i++) {
 		
 		color = colors[i];
 		transform(color.begin(), color.end(), color.begin(), ::tolower);
