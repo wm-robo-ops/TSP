@@ -4,7 +4,7 @@
 #include <fstream>
 #include <cmath>
 #include <algorithm>
-
+#include <utility>
 
 #define earthRadiusM 6371000.0
 
@@ -21,8 +21,10 @@ vector<int> min_route;
 double min_distance = HUGE_VAL;
 //Store the number of each rock node here (start with 2)
 vector<int> rock_nodes;
+//total points from best route
+int total_pts;
 
-
+void outputJSON();
 int getTotalPoints();
 int rockColorValue (string color);
 void swap(int& a, int& b);
@@ -52,13 +54,45 @@ int main() {
 	generateAllPermutations(rock_nodes);
 	
 	//print results
-	cout << "min distance: " << min_distance << "\n";
+	//cout << "min distance: " << min_distance << "\n";
 	
-	cout << "order: ";
-	printVector(rock_nodes);
+	//cout << "order: ";
+	//printVector(rock_nodes);
 
-	int total_pts = getTotalPoints();
-	cout << "total points: " << total_pts << "\n";
+	//total_pts = getTotalPoints();
+	//cout << "total points: " << total_pts << "\n";
+
+	outputJSON();
+
+}
+
+void outputJSON() {
+	
+	cout << "{\n\t\"nodes\":\n\t\t[\n";
+	
+	
+	//add rover position first to route
+	string color = colors[1];
+	cout << "\t\t\t{ \"lat\": \"" << nodes[1][0] << "\", \"lon\": \"" << nodes[1][1] << "\", \"color\": \"" << color << "\" },\n";
+	
+	for (unsigned int i = 0; i < nodes.size(); i++) {
+		
+		color = colors[i];
+		transform(color.begin(), color.end(), color.begin(), ::tolower);
+		cout << "\t\t\t{ \"lat\": \"" << nodes[i][0] << "\", \"lon\": \"" << nodes[i][1] << "\", \"color\": \"" << color << "\" },\n";
+
+	}
+
+	//add mount kosmo position to route
+	color = colors[0];
+	cout << "\t\t\t{ \"lat\": \"" << nodes[0][0] << "\", \"lon\": \"" << nodes[0][1] << "\", \"color\": \"" << color << "\" }\n";
+	
+	
+	cout << "\t\t],\n";
+
+	cout << "\t\"distance\": \"" << min_distance << "\",\n";
+
+	cout << "\t\"points\": \"" << total_pts << "\"\n}\n";
 
 }
 
@@ -77,8 +111,8 @@ int getTotalPoints() {
 //assumes colors are all lowercase
 int rockColorValue (string color) {
 	
-	//string color_lower = std::transform(color.begin(), color.end(), color.begin(), ::tolower);
-
+	transform(color.begin(), color.end(), color.begin(), ::tolower);
+	
 	if (!color.compare("yellow")) {
 		return 1;
 	} else if (!color.compare("orange")) {
@@ -149,7 +183,7 @@ void fillNodes () {
 			cerr << "Couldn't parse line " << counter+1 << " correctly. Continuing ...\n";
 			continue;
 		} 
-		cout << line << "\nlat cord: " << lat_cord << "\nlong cord: " << long_cord << "\ncolor: " <<  color << "\n\n";
+		//cout << line << "\nlat cord: " << lat_cord << "\nlong cord: " << long_cord << "\ncolor: " <<  color << "\n\n";
 		double array[] = {lat_cord, long_cord};
 		vector<double> vec (array, array + sizeof(array)/sizeof(double));
 		
