@@ -5,6 +5,8 @@
 #include <cmath>
 #include <algorithm>
 #include <utility>
+#include <stdlib.h>
+
 
 #define earthRadiusM 6371000.0
 
@@ -22,24 +24,43 @@ double min_distance = HUGE_VAL;
 //Store the number of each rock node here (start with 2)
 vector<int> rock_nodes;
 //total points from best route
-int total_pts;
+int total_pts = 0;
+//max distance allowed
+double max_distance = HUGE_VAL;
+//length of number of nodes in min_route, max value should be (rock_nodes.size() - 1)
+int rock_nodes_length = -1;
 
 void outputJSON();
-int getTotalPoints();
+int getTotalPoints(unsigned int length);
 int rockColorValue (string color);
 void swap(int& a, int& b);
 void printVector(vector<int>& theVector);
 void generateAllPermutations(vector<int>& toBePermuted, unsigned int nextIndex);
 void generateAllPermutations(vector<int>& toBePermuted); 
 void fillNodes ();
-double calculateTotalDistance(vector<int> rock_nodes, vector< vector<double> > nodes);
+double calculateTotalDistance(vector<int> rock_nodes, vector< vector<double> > nodes, int length);
 double cordsToDist(vector<double> cord1, vector<double> cord2);
 double deg2rad(double deg);
 double rad2deg(double rad);
 
 
 
-int main() {
+int main(int argc, char *argv[]) {
+
+	char *temp;
+
+	//if max distance given
+	if  (argc  == 2) {
+		if (!(max_distance = strtof(argv[1], &temp))) {
+			cerr << "usage: TSP [max_distance]\n";
+			return 1;
+		}
+		
+
+	} else if (argc > 2) {
+		cerr << "usage: TSP [max_distance]\n";
+		return 1;
+	}
 
 	//read in nodes.txt
 	fillNodes();	
@@ -52,16 +73,13 @@ int main() {
   	
 	//find min distance
 	generateAllPermutations(rock_nodes);
-	
-	//print results
-	//cout << "min distance: " << min_distance << "\n";
-	
-	//cout << "order: ";
-	//printVector(rock_nodes);
 
-	//total_pts = getTotalPoints();
-	//cout << "total points: " << total_pts << "\n";
+	//if no route less than max distance set distance to distance between bigDaddy and Kosmo
+	if (min_distance == HUGE_VAL) {
+		min_distance = calculateTotalDistance(rock_nodes, nodes, -1);
+	}
 
+	//print JSON
 	outputJSON();
 
 }
@@ -75,11 +93,10 @@ void outputJSON() {
 	string color = colors[1];
 	cout << "\t\t\t{ \"lat\": \"" << nodes[1][0] << "\", \"lon\": \"" << nodes[1][1] << "\", \"color\": \"" << color << "\" },\n";
 	
-	for (unsigned int i = 2; i < nodes.size(); i++) {
-		
-		color = colors[i];
+	for (int i = 0; i <= rock_nodes_length; i++) {
+		color = colors[min_route[i]];
 		transform(color.begin(), color.end(), color.begin(), ::tolower);
-		cout << "\t\t\t{ \"lat\": \"" << nodes[i][0] << "\", \"lon\": \"" << nodes[i][1] << "\", \"color\": \"" << color << "\" },\n";
+		cout << "\t\t\t{ \"lat\": \"" << nodes[min_route[i]][0] << "\", \"lon\": \"" << nodes[min_route[i]][1] << "\", \"color\": \"" << color << "\" },\n";
 
 	}
 
@@ -96,19 +113,19 @@ void outputJSON() {
 
 }
 
-int getTotalPoints() {
+//max value of length should be (rock_nodes - 1)
+int getTotalPoints(unsigned int length) {
 
 	int total = 0;
 
-	for (unsigned int i = 0; i < min_route.size(); i++) {
-		total += rockColorValue(colors[min_route[i]]);
+	for (unsigned int i = 0; i <= length; i++) {
+		total += rockColorValue(colors[rock_nodes[i]]);
 	}
 
 	return total;
 
 }
 
-//assumes colors are all lowercase
 int rockColorValue (string color) {
 	
 	transform(color.begin(), color.end(), color.begin(), ::tolower);
@@ -140,25 +157,39 @@ void swap(int& a, int& b){
 
 void printVector(vector<int>& theVector) { 
 	for (unsigned int i=0; i<theVector.size(); i++) {
-    		std::cout << theVector[i];
+    		cout << theVector[i];
 		if (i != theVector.size() - 1) {
 			cout  << ",";	
 		}
 	}
-  	std::cout << "\n";
+  	cout << "\n";
 }
 
 void generateAllPermutations(vector<int>& toBePermuted, unsigned int nextIndex) { 
 	if (nextIndex==toBePermuted.size()) { 
 		//printVector(toBePermuted);
-		double distance = calculateTotalDistance(rock_nodes, nodes);
-		if (min_distance >  distance) {
-			min_distance = distance;
-			min_route = rock_nodes;
+		for (unsigned int i = 0; i < rock_nodes.size(); i++) {
+			double distance = calculateTotalDistance(rock_nodes, nodes, i);
+			int points = getTotalPoints(i);
+			if (distance < max_distance && points >= total_pts) {
+				//more points in route
+				if (points > total_pts) {
+					rock_nodes_length = i;
+					min_distance = distance;
+					min_route = rock_nodes;
+					total_pts = points;
+				//points equal but shorter route
+				} else if (distance < min_distance) {
+					rock_nodes_length = i;
+					min_distance = distance;
+					min_route = rock_nodes;
+					total_pts = points;
+				}
+			}
 		}
     		return;
   	}
-	for (unsigned int i=nextIndex; i<toBePermuted.size(); i++) { 
+	for (unsigned int i = nextIndex; i < toBePermuted.size(); i++) { 
 		swap(toBePermuted[i], toBePermuted[nextIndex]);
     		generateAllPermutations(toBePermuted, nextIndex+1);
     		swap(toBePermuted[i], toBePermuted[nextIndex]);
@@ -169,8 +200,7 @@ void generateAllPermutations(vector<int>& toBePermuted) {
 	generateAllPermutations(toBePermuted, 0);
 }
 
-void fillNodes () {
-	
+void fillNodes () {	
 	//line should  be Lat:Long:color
 	char line[1024];
 	FILE *file;
@@ -203,18 +233,19 @@ void fillNodes () {
 
 }
 
-double calculateTotalDistance(vector<int> rock_nodes, vector< vector<double> > nodes) {
+//max value of length should be (rock_nodes - 1)
+double calculateTotalDistance(vector<int> rock_nodes, vector< vector<double> > nodes, int length) {
 	//calculate the distance to get back to the start only (no rock nodes)
-	if (nodes.size() <= 2) {
+	if (nodes.size() <= 2 || length == -1) {
 		return cordsToDist(nodes[0], nodes[1]);
 	}
 	
 	//At least one rock node, calculate distance from rover to first rock
-	double cur_distance = cordsToDist(nodes[1], nodes[2]);
-
+	double cur_distance = cordsToDist(nodes[1], nodes[rock_nodes[0]]);
+	
 	//Calculate distances from each rock to rock and final rock to start
-	for (unsigned int i=0; i < rock_nodes.size(); i++) {
-    		if (i != (rock_nodes.size() - 1)) {
+	for (int i = 0; i <= length; i++) {
+    		if (i != (length)) {
 			cur_distance += cordsToDist(nodes[rock_nodes[i]], nodes[rock_nodes[i+1]]);
 		} else {
 			cur_distance += cordsToDist(nodes[rock_nodes[i]], nodes[0]);

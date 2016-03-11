@@ -15,7 +15,7 @@ make
 
 #### Run
 ```
-./TSP
+./TSP [max_distance]
 ```
 
 #### Example
