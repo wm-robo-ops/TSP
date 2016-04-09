@@ -85,7 +85,8 @@ int main(int argc, char *argv[]) {
 }
 
 void outputJSON() {
-	
+
+	cout.precision(17);
 	cout << "{\n\t\"nodes\":\n\t\t[\n";
 	
 	
