@@ -92,25 +92,25 @@ void outputJSON() {
 	
 	//add rover position first to route
 	string color = colors[1];
-	cout << "\t\t\t{ \"lat\": \"" << nodes[1][0] << "\", \"lon\": \"" << nodes[1][1] << "\", \"color\": \"" << color << "\" },\n";
+	cout << "\t\t\t{ \"lat\": " << nodes[1][0] << ", \"lon\": " << nodes[1][1] << ", \"color\": \"" << color << "\" },\n";
 	
 	for (int i = 0; i <= rock_nodes_length; i++) {
 		color = colors[min_route[i]];
 		transform(color.begin(), color.end(), color.begin(), ::tolower);
-		cout << "\t\t\t{ \"lat\": \"" << nodes[min_route[i]][0] << "\", \"lon\": \"" << nodes[min_route[i]][1] << "\", \"color\": \"" << color << "\" },\n";
+		cout << "\t\t\t{ \"lat\": " << nodes[min_route[i]][0] << ", \"lon\": " << nodes[min_route[i]][1] << ", \"color\": \"" << color << "\" },\n";
 
 	}
 
 	//add mount kosmo position to route
 	color = colors[0];
-	cout << "\t\t\t{ \"lat\": \"" << nodes[0][0] << "\", \"lon\": \"" << nodes[0][1] << "\", \"color\": \"" << color << "\" }\n";
+	cout << "\t\t\t{ \"lat\": " << nodes[0][0] << ", \"lon\": " << nodes[0][1] << ", \"color\": \"" << color << "\" }\n";
 	
 	
 	cout << "\t\t],\n";
 
-	cout << "\t\"distance\": \"" << min_distance << "\",\n";
+	cout << "\t\"distance\": " << min_distance << ",\n";
 
-	cout << "\t\"points\": \"" << total_pts << "\"\n}\n";
+	cout << "\t\"points\": " << total_pts << "\n}\n";
 
 }
 
